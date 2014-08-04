@@ -34,3 +34,8 @@ Icon
 # Files that might appear on external disk
 .Spotlight-V100
 .Trashes
+*.pyc
+Hubic/.idea/
+Hubic/config.py
+*.pickle
+*.log
