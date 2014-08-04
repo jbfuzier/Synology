@@ -8,6 +8,10 @@ from localstorage import LocalStorage
 logger = setUpLogging()
 
 
+#TODO
+#   Ignore extentions
+
+
 class DirectoriesComparator(object):
     def __init__(self):
         auth_package = config.auth_package
@@ -23,8 +27,8 @@ class DirectoriesComparator(object):
             local_path = normpath(os.path.join(local_prefix, directory['path']))
             hubic_path = normpath(os.path.join(hubic_prefix, directory['path']))
             logger.info("Checking [%s]%s <-> [%s]%s"%(local_prefix, directory['path'], hubic_prefix, directory['path']))
-            hubic_files = self.hubic.getAllObjectsMetadataIndexedByPath(path=hubic_path, prefix = hubic_prefix, ignored_exts= None, limit=None)
-            local_files = self.localhost.getAllObjectsMetadataIndexedByPath(path=local_path, ignored_exts=None, prefix=local_prefix)
+            hubic_files = self.hubic.getAllObjectsMetadataIndexedByPath(path=hubic_path, prefix = hubic_prefix, ignored_exts=ignored_ext, limit=None)
+            local_files = self.localhost.getAllObjectsMetadataIndexedByPath(path=local_path, ignored_exts=ignored_ext, prefix=local_prefix)
 
             hubic_keyset = hubic_files.viewkeys()
             local_keyset = local_files.viewkeys()

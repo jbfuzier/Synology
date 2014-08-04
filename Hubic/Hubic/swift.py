@@ -70,7 +70,7 @@ class SwiftObjects(object):
                         path = self.path,
                         limit=self.limit,
         )[1]
-        pass
+        logger.info("done : %s objects fetched"%len(self.objects))
 
     def __len__(self):
         if self.objects is None:

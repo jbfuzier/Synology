@@ -16,6 +16,7 @@ class LocalStorage(object):
                 u'/volume/toto' : {u'name': '/volume/toto', 'hash' : 'md5hash', 'last_modified': '', 'bytes': '193'}
             }
         """
+        logger.info("Building local file list & checksums")
         files_dict = {}
         files = generateTree(path)
         for file in files:
@@ -34,5 +35,6 @@ class LocalStorage(object):
             if prefix is not None:
                 file_k = file.replace(prefix, "")
             files_dict[file_k] = file_metadata
+        logger.info("Done %s files found"%len(files_dict))
         return files_dict
 
