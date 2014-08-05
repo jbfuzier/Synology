@@ -58,6 +58,8 @@ class SwiftObjects(object):
                 logger.error("While storing %s : %s"%(e))
                 if e.http_status == 404:
                     logger.error("File was not stored properly on hubic (404)")
+            uploaded += 1
+            logger.debug("File %s stored sucessfully on hubic"%(file_to_upload))
 
     #{'status': 201, 'headers': {'content-length': '0', 'last-modified': 'Mon, 04 Aug 2014 11:01:44 GMT', 'connection': 'close', 'etag': '5d933eef19aee7da192608de61b6c23d', 'x-trans-id': 'tx3cca9f2ab97a4d6e8c2b6d58afbcd10f', 'date': 'Mon, 04 Aug 2014 11:01:45 GMT', 'content-type': 'text/html; charset=UTF-8'}, 'reason': 'Created', 'response_dicts': [{'status': 201, 'headers': {'content-length': '0', 'last-modified': 'Mon, 04 Aug 2014 11:01:44 GMT', 'connection': 'close', 'etag': '5d933eef19aee7da192608de61b6c23d', 'x-trans-id': 'tx3cca9f2ab97a4d6e8c2b6d58afbcd10f', 'date': 'Mon, 04 Aug 2014 11:01:45 GMT', 'content-type': 'text/html; charset=UTF-8'}, 'reason': 'Created'}]}
 
