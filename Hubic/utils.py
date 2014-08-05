@@ -134,15 +134,12 @@ def normpath(path):
     return os.path.normpath(path).replace("\\", "/")
 
 def generateTree(root):
-    # files_dict = {}
-    # dirs_dict = {}
     for path, dirs, files in os.walk(root):
         for file in files:
-            # files_dict[os.path.join(path, file)]=0
             yield os.path.join(path, file)
-            # for dir in dirs:
-            # dirs_dict[os.path.join(path,dir)]=0
-            # return (dirs_dict,files_dict)
+        for dir in dirs:
+            yield os.path.join(path, dir)
+
 
 def sha1(filepath):
     hasher = hashlib.sha1()

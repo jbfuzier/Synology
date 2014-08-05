@@ -2,6 +2,7 @@ import logging
 from utils import human_bytes
 import swiftclient
 import config
+from sets import Set
 import os
 from Hubic.auth import SwiftTokenManager
 logger = logging.getLogger("%s.%s"%(config.appname, __name__))
@@ -14,6 +15,7 @@ class SwiftObjects(object):
         self.container = container
         self.path = path
         self.limit = limit
+        self.created_directories = Set()
         if limit is None:
             self.full_listing = True
 
@@ -22,6 +24,23 @@ class SwiftObjects(object):
         self.limit = limit
         if limit is None:
             self.full_listing = True
+
+    def createDirectory(self, path):
+        # Create pseudo directory to make hubic happy
+        if path in self.created_directories:
+            logger.debug("Directory %s already exists"%path)
+            return
+        try:
+            self.swift_client.put_object(
+                container=self.container,
+                obj=path,
+                content_length = 0,
+                contents = None,
+                content_type = 'application/directory')
+            logger.debug("Directory %s created"%path)
+            self.created_directories.add(path)
+        except swiftclient.ClientException as e:
+            logger.warning("Failed to create pseudo dir %s on hubic : %s"%(path, e))
 
     def upload(self, files_to_upload):
         uploaded = 1
@@ -37,30 +56,36 @@ class SwiftObjects(object):
                 len(files_to_upload)
                 )
             )
-            with open(file_to_upload['local_path']) as f:
-                response_dict = {}
+            """
+            In swift objects are stored with an uri based name, there are no directories, BUT hubic only shows content if pseudo directories are created (empty file with content type directory)
+            Even if objects are not shown in hubic due to a lack of pseudo dir, objects still exists
+            """
+            if file_to_upload['is_dir']:
+                self.createDirectory(file_to_upload['name'])
+            else:
+                with open(file_to_upload['local_path']) as f:
+                    response_dict = {}
+                    try:
+                        self.swift_client.put_object(
+                            container = self.container,
+                            obj = file_to_upload['name'],
+                            contents=f,
+                            content_length=file_to_upload['bytes'],
+                            response_dict = response_dict,
+                            etag=file_to_upload['hash']
+                        )
+                    except swiftclient.ClientException as e:
+                        logger.error("While storing %s : %s"%(e))
                 try:
-                    self.swift_client.put_object(
-                        container = self.container,
-                        obj = file_to_upload['name'],
-                        contents=f,
-                        content_length=file_to_upload['bytes'],
-                        response_dict = response_dict,
-                        etag=file_to_upload['hash']
-                    )
+                    stored_obj_attributes = self.swift_client.head_object(self.container, file_to_upload['name'])
+                    if (response_dict['headers']['etag'] != file_to_upload['hash']) or (stored_obj_attributes['etag'] != file_to_upload['hash']):
+                        logger.critical("File %s got corrupted during upload"%(file_to_upload))
                 except swiftclient.ClientException as e:
                     logger.error("While storing %s : %s"%(e))
-            try:
-                stored_obj_attributes = self.swift_client.head_object(self.container, file_to_upload['name'])
-                if (response_dict['headers']['etag'] != file_to_upload['hash']) or (stored_obj_attributes['etag'] != file_to_upload['hash']):
-                    logger.critical("File %s got corrupted during upload"%(file_to_upload))
-            except swiftclient.ClientException as e:
-                logger.error("While storing %s : %s"%(e))
-                if e.http_status == 404:
-                    logger.error("File was not stored properly on hubic (404)")
+                    if e.http_status == 404:
+                        logger.error("File was not stored properly on hubic (404)")
+                logger.debug("File %s stored sucessfully on hubic"%(file_to_upload))
             uploaded += 1
-            logger.debug("File %s stored sucessfully on hubic"%(file_to_upload))
-
     #{'status': 201, 'headers': {'content-length': '0', 'last-modified': 'Mon, 04 Aug 2014 11:01:44 GMT', 'connection': 'close', 'etag': '5d933eef19aee7da192608de61b6c23d', 'x-trans-id': 'tx3cca9f2ab97a4d6e8c2b6d58afbcd10f', 'date': 'Mon, 04 Aug 2014 11:01:45 GMT', 'content-type': 'text/html; charset=UTF-8'}, 'reason': 'Created', 'response_dicts': [{'status': 201, 'headers': {'content-length': '0', 'last-modified': 'Mon, 04 Aug 2014 11:01:44 GMT', 'connection': 'close', 'etag': '5d933eef19aee7da192608de61b6c23d', 'x-trans-id': 'tx3cca9f2ab97a4d6e8c2b6d58afbcd10f', 'date': 'Mon, 04 Aug 2014 11:01:45 GMT', 'content-type': 'text/html; charset=UTF-8'}, 'reason': 'Created'}]}
 
 

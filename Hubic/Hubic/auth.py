@@ -16,11 +16,11 @@ class RequestTokenManager(object):
 
     @property
     def token(self):
-        if self._token is None:
-            logging.debug("Requesting oauth request token (should appen only once")
-            self._requestRequestToken()
-            logging.debug("\t oauth request token : %s"%self._token)
-            #TODO : drop user & password
+        #if self._token is None:
+        # Oauth request token also expires, but no expiration time in hubic api docs !
+        logging.debug("Requesting oauth request token")
+        self._requestRequestToken()
+        logging.debug("\t oauth request token : %s"%self._token)
         return self._token
 
     def _requestRequestToken(self):

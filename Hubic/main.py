@@ -51,6 +51,7 @@ class DirectoriesComparator(object):
                           'local_path': local_files[k]['name'],
                           'hash': local_files[k]['hash'],
                           'bytes': local_files[k]['bytes'],
+                          'is_dir': local_files[k]['is_dir'],
                          } for k in missing_on_hubic
         ]
         self.to_upload += missing_files
@@ -66,6 +67,8 @@ class DirectoriesComparator(object):
         for key in present_on_both:
             hubic_file = hubic_files[key]
             local_file = local_files[key]
+            if local_file['is_dir']:
+                continue #Don't compare hash for directories!
             hubic_md5 = hubic_file['hash']
             local_md5 = local_file['hash']
             if hubic_md5 == local_md5:

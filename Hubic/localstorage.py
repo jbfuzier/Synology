@@ -30,11 +30,18 @@ class LocalStorage(object):
                         continue
             if ignore_file:
                 continue
+
+            is_dir = os.path.isdir(file)
+            if is_dir:
+                md5_hash = None
+            else:
+                md5_hash = md5(file)
             file_metadata = {
                 'name': file,
-                'hash': md5(file),
+                'hash': md5_hash,
                 'last_modified': datetime.fromtimestamp(os.path.getmtime(file)),
                 'bytes': os.path.getsize(file),
+                'is_dir': is_dir
                 }
             if prefix is not None:
                 file_k = file.replace(prefix, "")
