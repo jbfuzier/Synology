@@ -22,10 +22,14 @@ class LocalStorage(object):
         for file in files:
             file = normpath(file)
             if ignored_exts is not None:
+                ignore_file = False
                 for ign_ext in ignored_exts:
                     if file.endswith(ign_ext):
                         logger.debug("Ignoring file %s (based on extension)"%(file))
+                        ignore_file = True
                         continue
+            if ignore_file:
+                continue
             file_metadata = {
                 'name': file,
                 'hash': md5(file),

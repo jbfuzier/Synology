@@ -63,11 +63,15 @@ class Hubic(object):
         hubic_files_container.filterBy(path=path, limit=limit)
         for object in hubic_files_container:
             name = object['name']
+            ignore_file = False
             if ignored_exts is not None:
                 for ign_ext in ignored_exts:
                     if name.endswith(ign_ext):
                         logger.debug("Ignoring %s (based on file extension)"%name)
+                        ignore_file = True
                         continue
+            if ignore_file:
+                continue
             if prefix is not None:
                 name = name.replace(prefix, "")
             obj_dict[name] = object

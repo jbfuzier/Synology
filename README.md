@@ -17,6 +17,9 @@ https://github.com/jbfuzier/Synology/tree/master/Hubic
 ####integrity_check_github.py
 All in one (messy) file, config inside the file
 
+#### raid_scrub.sh
+Simple shell script to perform periodical raid scrub (to detect raid incoherences), change RAID_ARRAY and MAIL_TO according to your needs.
+Require : nail to send email (installable via ipkg on synology)
 
 ### Want to get more paranoid about data integrity :
 http://www.zdnet.com/has-raid5-stopped-working-7000019939/
