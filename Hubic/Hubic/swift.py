@@ -2,7 +2,6 @@ import logging
 from utils import human_bytes
 import swiftclient
 import config
-from sets import Set
 import os
 from Hubic.auth import SwiftTokenManager
 logger = logging.getLogger("%s.%s"%(config.appname, __name__))
@@ -15,7 +14,7 @@ class SwiftObjects(object):
         self.container = container
         self.path = path
         self.limit = limit
-        self.created_directories = Set()
+        self.created_directories = set()
         if limit is None:
             self.full_listing = True
 
