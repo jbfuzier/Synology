@@ -20,11 +20,14 @@ class AuthPackage(object):
 
 class Hubic(object):
     def __init__(self, auth_package = None):
+        self._containers = None
         self.swift_client = SwiftClientWrapper(auth_package)
 
     @property
     def containers(self):
-        return SwiftContainers(self.swift_client)
+        if self._containers is None:
+            self._containers = SwiftContainers(self.swift_client)
+        return self._containers
 
     def __str__(self):
         return unicode(self).encode('utf-8')
