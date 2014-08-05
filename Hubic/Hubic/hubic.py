@@ -53,6 +53,10 @@ class Hubic(object):
         hubic_files_container.upload(files)
         logger.warning("Upload done")
 
+    def createDirectory(self, path):
+        hubic_files_container = self.containers['default']
+        hubic_files_container.createDirectory(path)
+
     def getAllObjectsMetadataIndexedByPath(self, path=None, ignored_exts=None, prefix=None, limit=None):
         obj_dict = {}
         hubic_files_container = self.containers['default']

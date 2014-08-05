@@ -41,7 +41,18 @@ class DirectoriesComparator(object):
             self.handleMissingOnLocal(missing_on_local=missing_on_local, hubic_files=hubic_files, local_files=local_files)
             self.handlePresentOnBoth(present_on_both=present_on_both, hubic_files=hubic_files, local_files=local_files)
         if config.upload_missing_files:
+            self._createPrefixDirs(hubic_path)
             self.hubic.upload(self.to_upload)
+
+    def _createPrefixDirs(self,hubic_prefix):
+        dir_split = hubic_prefix
+        while True:
+            logging.debug("Creating prefix directory %s"%dir_split)
+            self.hubic.createDirectory(dir_split)
+            len_b = len(dir_split)
+            dir_split = os.path.split(dir_split)[0]
+            if len(dir_split) == len_b:
+                break
 
     def handleMissingOnHubic(self, missing_on_hubic, hubic_files, local_files, hubic_prefix):
         logger.warning("%s files missing on hubic : %s"%(len(missing_on_hubic), missing_on_hubic))

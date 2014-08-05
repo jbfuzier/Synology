@@ -8,13 +8,13 @@ logger = logging.getLogger("%s.%s"%(config.appname, __name__))
 
 
 class SwiftObjects(object):
+    created_directories = set()
     def __init__(self, swift_client, container, path = None, limit = None):
         self.swift_client = swift_client
         self.objects = None
         self.container = container
         self.path = path
         self.limit = limit
-        self.created_directories = set()
         if limit is None:
             self.full_listing = True
 
@@ -26,6 +26,8 @@ class SwiftObjects(object):
 
     def createDirectory(self, path):
         # Create pseudo directory to make hubic happy
+        if len(path) == 0:
+            return
         if path in self.created_directories:
             logger.debug("Directory %s already exists"%path)
             return
