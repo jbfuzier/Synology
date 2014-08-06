@@ -43,10 +43,23 @@ class SwiftObjects(object):
         except swiftclient.ClientException as e:
             logger.warning("Failed to create pseudo dir %s on hubic : %s"%(path, e))
 
-    def upload(self, files_to_upload):
+    def upload(self, to_upload):
         uploaded = 1
+        dirs_to_create = [e for e in to_upload if e['is_dir']]
+        files_to_upload = [e for e in to_upload if not e['is_dir']]
+        """
+        In swift objects are stored with an uri based name, there are no directories, BUT hubic only shows content if pseudo directories are created (empty file with content type directory)
+        Even if objects are not shown in hubic due to a lack of pseudo dir, objects still exists
+        """
+        for dir_ in dirs_to_create:
+            if dir_["name"][0] == "/": # Swift client (or hubic?) lib does not handle properly name starting with / (-> test.com/container//object)
+                dir_["name"] = dir_["name"][1:]
+            if len(dir_["name"])>1024:
+                logger.error("dir %s name is too long (>1024)"%(dir_["name"])) #Swift object names are limited to 1024
+            self.createDirectory(dir_['name'])
+
         for file_to_upload in files_to_upload:
-            if file_to_upload["name"][0] == "/": # Swift client (or hubuc?) lib does not handle properly name starting with / (-> test.com/container//object)
+            if file_to_upload["name"][0] == "/": # Swift client (or hubic?) lib does not handle properly name starting with / (-> test.com/container//object)
                 file_to_upload["name"] = file_to_upload["name"][1:]
             if len(file_to_upload["name"])>1024:
                 logger.error("filename %s is too long (>1024)"%(file_to_upload["name"])) #Swift object names are limited to 1024
@@ -57,35 +70,29 @@ class SwiftObjects(object):
                 len(files_to_upload)
                 )
             )
-            """
-            In swift objects are stored with an uri based name, there are no directories, BUT hubic only shows content if pseudo directories are created (empty file with content type directory)
-            Even if objects are not shown in hubic due to a lack of pseudo dir, objects still exists
-            """
-            if file_to_upload['is_dir']:
-                self.createDirectory(file_to_upload['name'])
-            else:
-                with open(file_to_upload['local_path']) as f:
-                    response_dict = {}
-                    try:
-                        self.swift_client.put_object(
-                            container = self.container,
-                            obj = file_to_upload['name'],
-                            contents=f,
-                            content_length=file_to_upload['bytes'],
-                            response_dict = response_dict,
-                            etag=file_to_upload['hash']
-                        )
-                    except swiftclient.ClientException as e:
-                        logger.error("While storing %s : %s"%(e))
+
+            with open(file_to_upload['local_path']) as f:
+                response_dict = {}
                 try:
-                    stored_obj_attributes = self.swift_client.head_object(self.container, file_to_upload['name'])
-                    if (response_dict['headers']['etag'] != file_to_upload['hash']) or (stored_obj_attributes['etag'] != file_to_upload['hash']):
-                        logger.critical("File %s got corrupted during upload"%(file_to_upload))
+                    self.swift_client.put_object(
+                        container = self.container,
+                        obj = file_to_upload['name'],
+                        contents=f,
+                        content_length=file_to_upload['bytes'],
+                        response_dict = response_dict,
+                        etag=file_to_upload['hash']
+                    )
                 except swiftclient.ClientException as e:
                     logger.error("While storing %s : %s"%(e))
-                    if e.http_status == 404:
-                        logger.error("File was not stored properly on hubic (404)")
-                logger.debug("File %s stored sucessfully on hubic"%(file_to_upload))
+            try:
+                stored_obj_attributes = self.swift_client.head_object(self.container, file_to_upload['name'])
+                if (response_dict['headers']['etag'] != file_to_upload['hash']) or (stored_obj_attributes['etag'] != file_to_upload['hash']):
+                    logger.critical("File %s got corrupted during upload"%(file_to_upload))
+            except swiftclient.ClientException as e:
+                logger.error("While storing %s : %s"%(e))
+                if e.http_status == 404:
+                    logger.error("File was not stored properly on hubic (404)")
+            logger.debug("File %s stored sucessfully on hubic"%(file_to_upload))
             uploaded += 1
     #{'status': 201, 'headers': {'content-length': '0', 'last-modified': 'Mon, 04 Aug 2014 11:01:44 GMT', 'connection': 'close', 'etag': '5d933eef19aee7da192608de61b6c23d', 'x-trans-id': 'tx3cca9f2ab97a4d6e8c2b6d58afbcd10f', 'date': 'Mon, 04 Aug 2014 11:01:45 GMT', 'content-type': 'text/html; charset=UTF-8'}, 'reason': 'Created', 'response_dicts': [{'status': 201, 'headers': {'content-length': '0', 'last-modified': 'Mon, 04 Aug 2014 11:01:44 GMT', 'connection': 'close', 'etag': '5d933eef19aee7da192608de61b6c23d', 'x-trans-id': 'tx3cca9f2ab97a4d6e8c2b6d58afbcd10f', 'date': 'Mon, 04 Aug 2014 11:01:45 GMT', 'content-type': 'text/html; charset=UTF-8'}, 'reason': 'Created'}]}
 

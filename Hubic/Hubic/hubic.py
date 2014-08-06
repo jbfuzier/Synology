@@ -113,9 +113,3 @@ if __name__ == '__main__':
         print o
 
     pass
-
-    #Object names cannot exceed 1024 bytes
-
-    #TODO
-    #   Implement object get by name
-    #   Error handling
