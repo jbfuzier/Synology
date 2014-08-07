@@ -99,12 +99,32 @@ class SwiftObjects(object):
 
     def refresh(self):
         logger.info("Fetching objects list for container %s"%self.container)
-        self.objects = self.swift_client.get_container(
-                        self.container,
-                        full_listing = self.full_listing,
-                        path = self.path,
-                        limit=self.limit,
-        )[1]
+        if self.path is not None:
+        # Sometime it is *WAY* faster to get the file list for the whole container than to do (nb of dir) requests (DSPhoto creates a LOT of dirs)
+            self.objects = []
+            dirs_to_explore = [self.path]
+            while True:
+                try:
+                    path = dirs_to_explore.pop()
+                    logger.debug("Requesting content of pseudo dir : %s"%path)
+                except IndexError:
+                    break
+                objects = self.swift_client.get_container(
+                    self.container,
+                    full_listing = self.full_listing,
+                    path = path,
+                    limit=self.limit,
+                )[1]
+                for obj in objects:
+                    if obj['content_type'] == u'application/directory':
+                        dirs_to_explore.append(obj['name'])
+                    self.objects.append(obj)
+        else:
+            self.objects = self.swift_client.get_container(
+                self.container,
+                full_listing = self.full_listing,
+                limit=self.limit,
+            )[1]
         logger.info("done : %s objects fetched"%len(self.objects))
 
     def __len__(self):

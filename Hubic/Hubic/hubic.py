@@ -63,9 +63,9 @@ class Hubic(object):
     def getAllObjectsMetadataIndexedByPath(self, path=None, ignored_exts=None, prefix=None, limit=None):
         obj_dict = {}
         hubic_files_container = self.containers['default']
-        if path[0] == "/":
+        if path is not None and path[0] == "/":
             path = path[1:]
-        if prefix[0] == "/":
+        if prefix is not None and prefix[0] == "/":
             prefix = prefix[1:]
         hubic_files_container.filterBy(path=path, limit=limit)
         for object in hubic_files_container:
@@ -87,29 +87,3 @@ class Hubic(object):
 
 
 
-
-if __name__ == '__main__':
-
-    import logging
-    logging.basicConfig(level = logging.DEBUG)
-
-    a = AuthPackage(
-        username="", # Used to authenticate to the Oauth Page
-        password="",
-        hubic_client_id="", # ID of the app
-        hubic_client_secret="", #PWD of the app
-    )
-
-
-    h=Hubic(a)
-
-    print h
-
-    print h.containers
-
-    print h.containers[1]
-
-    for o in h.containers:
-        print o
-
-    pass

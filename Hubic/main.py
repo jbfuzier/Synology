@@ -8,14 +8,12 @@ from localstorage import LocalStorage
 logger = setUpLogging()
 
 
-#TODO
-#   Ignore extentions
-
 
 class DirectoriesComparator(object):
     def __init__(self):
         auth_package = config.auth_package
         self.hubic = Hubic(auth_package)
+        logger.warning("\r\n%s"%self.hubic)
         self.localhost = LocalStorage()
         self.to_upload = []
 
@@ -27,7 +25,9 @@ class DirectoriesComparator(object):
             local_path = normpath(os.path.join(local_prefix, directory['path']))
             hubic_path = normpath(os.path.join(hubic_prefix, directory['path']))
             logger.info("Checking [%s]%s <-> [%s]%s"%(local_prefix, directory['path'], hubic_prefix, directory['path']))
-            hubic_files = self.hubic.getAllObjectsMetadataIndexedByPath(path=hubic_path, prefix = hubic_prefix, ignored_exts=ignored_ext, limit=None)
+            hubic_files = self.hubic.getAllObjectsMetadataIndexedByPath(prefix = hubic_prefix, ignored_exts=ignored_ext, limit=None)
+            # Because of the huge amount of dirs created by Synology DSphoto it is faster to get the list of file for the whole container than to iterate through the dir hierarchy we are interested in
+            #hubic_files = self.hubic.getAllObjectsMetadataIndexedByPath(path=hubic_path, prefix = hubic_prefix, ignored_exts=ignored_ext, limit=None)
             local_files = self.localhost.getAllObjectsMetadataIndexedByPath(path=local_path, ignored_exts=ignored_ext, prefix=local_prefix)
 
             hubic_keyset = hubic_files.viewkeys()
