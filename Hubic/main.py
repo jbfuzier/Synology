@@ -47,7 +47,7 @@ class DirectoriesComparator(object):
     def _createPrefixDirs(self,hubic_prefix):
         dir_split = hubic_prefix
         while True:
-            logging.debug("Creating prefix directory %s"%dir_split)
+            logger.debug("Creating prefix directory %s"%dir_split)
             self.hubic.createDirectory(dir_split)
             len_b = len(dir_split)
             dir_split = os.path.split(dir_split)[0]
