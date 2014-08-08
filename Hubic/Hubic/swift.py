@@ -89,7 +89,7 @@ class SwiftObjects(object):
                 if (response_dict['headers']['etag'] != file_to_upload['hash']) or (stored_obj_attributes['etag'] != file_to_upload['hash']):
                     logger.critical("File %s got corrupted during upload"%(file_to_upload))
             except swiftclient.ClientException as e:
-                logger.error("While storing %s : %s"%(e))
+                logger.error("While storing %s : %s"%(file_to_upload, e))
                 if e.http_status == 404:
                     logger.error("File was not stored properly on hubic (404)")
             logger.debug("File %s stored sucessfully on hubic"%(file_to_upload))
