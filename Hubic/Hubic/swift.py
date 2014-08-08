@@ -83,7 +83,7 @@ class SwiftObjects(object):
                         etag=file_to_upload['hash']
                     )
                 except swiftclient.ClientException as e:
-                    logger.error("While storing %s : %s"%(e))
+                    logger.error("While storing %s : %s"%(file_to_upload,e))
             try:
                 stored_obj_attributes = self.swift_client.head_object(self.container, file_to_upload['name'])
                 if (response_dict['headers']['etag'] != file_to_upload['hash']) or (stored_obj_attributes['etag'] != file_to_upload['hash']):

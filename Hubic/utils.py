@@ -5,6 +5,8 @@ import os
 import sys
 import config
 import time
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 import socket
 logger = logging.getLogger("%s.%s"%(config.appname, __name__))
 
@@ -53,21 +55,24 @@ class BufferingSMTPHandler(logging.handlers.SMTPHandler):
                 if not port:
                     port = smtplib.SMTP_PORT
                 smtp = smtplib.SMTP(self.mailhost, port)
-                msg = ""
+                msg = MIMEMultipart("alternative")
+                msg.set_charset("utf-8")
+                msg["Subject"] = self.getSubject(self.buffer[0])
+                msg["From"] = self.fromaddr
+                msg["To"] = ",".join(self.toaddrs)
+                msg_content = u""
                 for record in self.buffer:
-                    msg = msg + self.format(record) + "\r\n"
-                msg = "From: %s\r\nTo: %s\r\nSubject: %s\r\nDate: %s\r\n\r\n%s" % (
-                    self.fromaddr,
-                    ",".join(self.toaddrs),
-                    self.getSubject(self.buffer[0]),
-                    formatdate(), msg)
+                    msg_content = msg_content + self.format(record) + "\r\n"
+                msg_content = msg_content.encode('utf-8')
+                part1 = MIMEText(msg_content, 'plain', 'utf-8')
+                msg.attach(part1)
                 if self.username:
                     if self.secure is not None:
                         smtp.ehlo()
                         smtp.starttls(*self.secure)
                         smtp.ehlo()
                     smtp.login(self.username, self.password)
-                smtp.sendmail(self.fromaddr, self.toaddrs, msg)
+                smtp.sendmail(self.fromaddr, self.toaddrs, msg.as_string())
                 smtp.quit()
                 self.buffer = []
                 break
