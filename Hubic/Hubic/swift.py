@@ -82,7 +82,7 @@ class SwiftObjects(object):
                         response_dict = response_dict,
                         etag=file_to_upload['hash']
                     )
-                except swiftclient.ClientException as e:
+                except Exception as e:
                     logger.error("While storing %s : %s"%(file_to_upload,e))
             try:
                 stored_obj_attributes = self.swift_client.head_object(self.container, file_to_upload['name'])

@@ -48,6 +48,8 @@ def _get(url, params=None, headers={}):
     return _http_request(url, params, headers, method='GET')
 
 
+
+
 def _post(url, data=None, headers={}):
     return _http_request(url, data, headers, method='POST')
 
@@ -64,10 +66,14 @@ def _http_request(url, params=None, headers={}, method='GET'):
                 headers.update({'Content-type': 'application/x-www-form-urlencoded'})
                 conn.request('POST', '/' + uri, urlencode(data) if data else None, headers)
             response = conn.getresponse()
+            if str(response.status)[0]=="5":
+                logger.error("http error %s"%response)
+                raise Exception
             return conn, response
         except Exception as e:
-            logger.debug("Got Exception %s while %sing %s, retrying..."%(e, method, url))
-            time.sleep(config.backoff)
+            backoff = config.backoff * config.retry
+            logger.debug("Got Exception %s while %sing %s, waiting %s before retry..."%(e, method, url, backoff))
+            time.sleep(backoff)
 
 
 
