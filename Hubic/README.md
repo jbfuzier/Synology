@@ -34,3 +34,13 @@ File are regularly read and check against their checksums by openstack to avoid 
 ## How to use this script ?
 * Copy config_sample.py to config.py and edit it according to your needs
 
+
+### To run scripts from synology task scheduler
+* Install python2.X package
+* Add those two lines before calling any .py script (ensure filenames get read properly) :
+    export LANG="en_US.utf8"
+    export LC_ALL="en_US.utf8"
+    Example :
+        export LANG="en_US.utf8"
+        export LC_ALL="en_US.utf8"
+        python /volume2/homes/XXX/Hubic/main.py

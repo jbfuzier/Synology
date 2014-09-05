@@ -27,6 +27,17 @@ http://arstechnica.com/information-technology/2014/01/bitrot-and-atomic-cows-ins
 http://www.zdnet.com/blog/storage/data-corruption-is-worse-than-you-know/191
 
 
+### To run scripts from synology task scheduler
+* Install python2.X package
+* Add those two lines before calling any .py script (ensure filenames get read properly) :
+    export LANG="en_US.utf8"
+    export LC_ALL="en_US.utf8"
+    Example :
+        export LANG="en_US.utf8"
+        export LC_ALL="en_US.utf8"
+        python /volume2/homes/XXX/Hubic/main.py
+
+
 ### What is my backup strategy ?
 * 2 Nas in raid6 synced via Rsync
 * Raid scrub every month
