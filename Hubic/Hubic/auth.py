@@ -139,10 +139,11 @@ class AccessTokenManager(object):
                 err = json.loads(rdata)
                 err['code'] = r.status
             except Exception as e:
+                logging.error(rdata)
                 err = {}
 
             raise Exception("Unable to get oauth access token, "
-                            "wrong client_id or client_secret ? (%s)"%str(err))
+                            "wrong client_id or client_secret ? (%s) http code %s"%(str(err),r.status))
 
         oauth_token = json.loads(rdata)
         if oauth_token['token_type'].lower() != 'bearer':

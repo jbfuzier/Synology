@@ -3,9 +3,12 @@ import os
 import re
 import logging
 import json
-import hashlib 
+import hashlib
 import logging.handlers
 import sys
+import time
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 """
 Script to check integrity between a main store (Master) and its backup (Slave) :
@@ -14,23 +17,25 @@ Script to check integrity between a main store (Master) and its backup (Slave) :
 
 
 DIRECTORIES_ROOT=[{
-			'prefix': u'/volume2',
-			'path' : u'photo', 
-			'excluded_ext' : [
-				".json", 
-				"THUMB_L.jpg", 
-				"THUMB_M.jpg", 
-				"THUMB_S.jpg",
-				"THUMB_B.jpg",
-				"THUMB_XL.jpg",
-				]
-		},]
+                  'prefix': u'/volume2',
+                  'path' : u'photo',
+                  'excluded_ext' : [
+                      ".json",
+                      "THUMB_L.jpg",
+                      "THUMB_M.jpg",
+                      "THUMB_S.jpg",
+                      "THUMB_B.jpg",
+                      "THUMB_XL.jpg",
+                      ]
+                  },]
 
 DB_FILE="/volume2/hash_db/integrity_db.json"
 MASTER = False # Set to True on the master Node
 SMTP_SERVER = "ASPMX.L.GOOGLE.COM"
-FROM_ADDR = "integrity_check@XXXX.fr"
-TO_ADDR = "someone@gmail.com"
+FROM_ADDR = "XXXX@XXXX.fr"
+TO_ADDR = "XXXXX@gmail.com"
+
+
 
 
 class BufferingSMTPHandler(logging.handlers.SMTPHandler):
@@ -75,21 +80,24 @@ class BufferingSMTPHandler(logging.handlers.SMTPHandler):
                 if not port:
                     port = smtplib.SMTP_PORT
                 smtp = smtplib.SMTP(self.mailhost, port)
-                msg = ""
+                msg = MIMEMultipart("alternative")
+                msg.set_charset("utf-8")
+                msg["Subject"] = self.getSubject(self.buffer[0])
+                msg["From"] = self.fromaddr
+                msg["To"] = ",".join(self.toaddrs)
+                msg_content = u""
                 for record in self.buffer:
-                    msg = msg + self.format(record) + "\r\n"
-                msg = "From: %s\r\nTo: %s\r\nSubject: %s\r\nDate: %s\r\n\r\n%s" % (
-                    self.fromaddr,
-                    ",".join(self.toaddrs),
-                    self.getSubject(self.buffer[0]),
-                    formatdate(), msg)
+                    msg_content = msg_content + self.format(record) + "\r\n"
+                msg_content = msg_content.encode('utf-8')
+                part1 = MIMEText(msg_content, 'plain', 'utf-8')
+                msg.attach(part1)
                 if self.username:
                     if self.secure is not None:
                         smtp.ehlo()
                         smtp.starttls(*self.secure)
                         smtp.ehlo()
                     smtp.login(self.username, self.password)
-                smtp.sendmail(self.fromaddr, self.toaddrs, msg)
+                smtp.sendmail(self.fromaddr, self.toaddrs, msg.as_string())
                 smtp.quit()
                 self.buffer = []
                 break
@@ -106,7 +114,7 @@ def checkEncoding():
     sys_enc = sys.getfilesystemencoding()
     term_enc = sys.stdout.encoding
     if ( sys_enc != "UTF-8") or (sys.stdout.encoding != "UTF-8"):
-        logger.warning("System encoding is not UTF8, there may be issues, please check !! \r\n\tFS encoding : %s\tconsole encoding : %s"%(sys_enc, term_enc))
+        logger.warning("System encoding is not UTF8, there may be issues, please check !! (export LANG=en_US.utf8) \r\n\tFS encoding : %s\tconsole encoding : %s"%(sys_enc, term_enc))
 
 def setUpLogging():
     ##
@@ -128,11 +136,11 @@ def setUpLogging():
     ch.setFormatter(formatter)
     # SMTP logger
     sh = BufferingSMTPHandler(
-        mailhost = SMTP_SERVER, 
-        fromaddr = FROM_ADDR, 
-        toaddrs = TO_ADDR, 
+        mailhost = SMTP_SERVER,
+        fromaddr = FROM_ADDR,
+        toaddrs = TO_ADDR,
         subject = "Integrity check on %s" % socket.gethostname(),
-        )
+    )
     sh.setLevel(logging.WARNING)
     sh.setFormatter(formatter)
 
@@ -152,6 +160,8 @@ class Db (object):
         except Exception as e:
             self.version = 0
             logger.warning("%s does not exists or corrupted, starting with an empty DB : %s"%(self.path,e))
+            with open(self.path, 'wb'):
+                logging.debug("Empty DB created : Db location is writeable")
             if not MASTER:
                 raise Exception("Slave does not have a db")
     def save(self):
@@ -163,13 +173,13 @@ class Db (object):
             logger.error("could not save DB to %s : %s"%(self.path, e))
     @property
     def version(self):
-        return self.known_files['@@@@DB_VERSION@@@@']    
+        return self.known_files['@@@@DB_VERSION@@@@']
 
     @version.setter
     def version(self, value):
         self.known_files['@@@@DB_VERSION@@@@'] = value
         logger.debug("db version is now %s"%value)
-        
+
     def __len__(self):
         return len(self.known_files) - 1
 
@@ -178,7 +188,7 @@ class Db (object):
 
     def __getitem__(self,key):
         return self.known_files[key]
-        
+
     def __setitem__(self,key, value):
         if key in self:
             logger.error("File %s is already in DB!"%(key))
@@ -194,8 +204,8 @@ def sha1(filepath):
             hasher.update(buf)
             buf = f.read(1048576)
     return hasher.hexdigest()
-    
-    
+
+
 def generateTree(root):
     # files_dict = {}
     # dirs_dict = {}
@@ -203,9 +213,9 @@ def generateTree(root):
         for file in files:
             # files_dict[os.path.join(path, file)]=0
             yield os.path.join(path, file)
-        # for dir in dirs:
+            # for dir in dirs:
             # dirs_dict[os.path.join(path,dir)]=0
-    # return (dirs_dict,files_dict)
+            # return (dirs_dict,files_dict)
 
 def check_integrity():
     global MASTER
@@ -241,7 +251,7 @@ def check_integrity():
                     continue
                 logger.debug("new file %s"%f)
                 f_hash = sha1(f)
-                db[f_without_prefix] = f_hash            
+                db[f_without_prefix] = f_hash
                 new_files += 1
             else:
                 f_hash = sha1(f)
@@ -252,7 +262,7 @@ def check_integrity():
                     files_ok+=1
     if MASTER:
         db.save()
-    logger.warning("Corrupted files : %s - New files : %s - Valid files : %s - Db version : %s"%(errors, new_files,files_ok, db.version ))    	    
+    logger.warning("Corrupted files : %s - New files : %s - Valid files : %s - Db version : %s"%(errors, new_files,files_ok, db.version ))
 
     if not MASTER:
         if files_ok != len(db):
@@ -261,8 +271,10 @@ def check_integrity():
 setUpLogging()
 try:
     checkEncoding()
-#    check_integrity()
-    logger.warning("test")
+    check_integrity()
+    #logger.warning("test")
 except Exception as e:
     logger.critical("CRASH while checking integrity : %s "%(e))
 logging.shutdown()
+
+     

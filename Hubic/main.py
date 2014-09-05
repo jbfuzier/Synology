@@ -2,11 +2,10 @@ import config
 from Hubic.hubic import Hubic
 import os
 import logging
-from utils import normpath, setUpLogging, human_bytes
+from utils import normpath, setUpLogging, human_bytes, checkEncoding
 from localstorage import LocalStorage
 
 logger = setUpLogging()
-
 
 
 class DirectoriesComparator(object):
@@ -33,9 +32,14 @@ class DirectoriesComparator(object):
             hubic_keyset = hubic_files.viewkeys()
             local_keyset = local_files.viewkeys()
 
+            logging.debug(hubic_keyset)
+            logging.debug(local_keyset)
+
             missing_on_hubic = local_keyset - hubic_keyset
             missing_on_local = hubic_keyset - local_keyset
             present_on_both = hubic_keyset & local_keyset
+
+            logger.info("Local : %s | Hubic : %s"%(len(local_files), len(hubic_files)))
 
             self.handleMissingOnHubic(missing_on_hubic=missing_on_hubic, hubic_files=hubic_files, local_files=local_files, hubic_prefix=hubic_prefix)
             self.handleMissingOnLocal(missing_on_local=missing_on_local, hubic_files=hubic_files, local_files=local_files)
@@ -100,8 +104,9 @@ class DirectoriesComparator(object):
 
 
 
-
+checkEncoding()
 a=DirectoriesComparator()
 a.do()
+logger.info("All done!")
 logging.shutdown()
 pass

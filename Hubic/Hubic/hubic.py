@@ -70,6 +70,13 @@ class Hubic(object):
         hubic_files_container.filterBy(path=path, limit=limit)
         for object in hubic_files_container:
             name = object['name']
+            if prefix is not None:
+                if not name.startswith(prefix):
+                    logger.debug("%s is not in %s"%(name, prefix))
+                    continue
+                name = name.replace(prefix, "")
+                if len(name) == 0:
+                    continue
             ignore_file = False
             if ignored_exts is not None:
                 for ign_ext in ignored_exts:
@@ -79,8 +86,6 @@ class Hubic(object):
                         continue
             if ignore_file:
                 continue
-            if prefix is not None:
-                name = name.replace(prefix, "")
             obj_dict[name] = object
         objects = None
         return obj_dict

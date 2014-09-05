@@ -11,6 +11,11 @@ import socket
 logger = logging.getLogger("%s.%s"%(config.appname, __name__))
 
 
+def checkEncoding():
+    sys_enc = sys.getfilesystemencoding()
+    term_enc = sys.stdout.encoding
+    if ( sys_enc != "UTF-8") or (sys.stdout.encoding != "UTF-8"):
+        logger.warning("System encoding is not UTF8, there may be issues, please check !! (export LANG=en_US.utf8) \r\n\tFS encoding : %s\tconsole encoding : %s"%(sys_enc, term_enc))
 
 
 class BufferingSMTPHandler(logging.handlers.SMTPHandler):
@@ -139,6 +144,7 @@ def normpath(path):
     return os.path.normpath(path).replace("\\", "/")
 
 def generateTree(root):
+    yield root
     for path, dirs, files in os.walk(root):
         for file in files:
             yield os.path.join(path, file)
