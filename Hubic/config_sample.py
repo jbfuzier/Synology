@@ -10,22 +10,36 @@ upload_missing_files = True
 import logging
 import socket
 console_logging_level = logging.DEBUG
-smtp_logging = True
+smtp_logging = True # Enable/disable email report
 smtp_logging_level = logging.INFO
-smtp_host = "smtp.XXXX.fr"
-smtp_sender = "%s@XXXX.fr"%(socket.gethostname())
-smtp_receiver = "someone@XXXX.com"
+smtp_host = "smtp.XXXX.fr" # Smtp server to send mail from
+smtp_sender = "%s@XXXX.fr"%(socket.gethostname()) # From field for email
+smtp_receiver = "someone@XXXX.com" 
 file_logging = True
 file_logging_level = logging.DEBUG
 log_file = "hubic_sync.log"
 appname = "hubicsync"
 
 
-
-DIRECTORIES_ROOT=[{
-                  'local_prefix': u'C:\\Users\\jb\\Desktop\\',
+# Select which directories to sync
+DIRECTORIES_ROOT=[{ # In this example we want to sync C:\\Users\\jb\\Desktop\\hubictest 
+                    # to Hubic under the location \Backup\hubictest
+                  'local_prefix': u'C:\\Users\\jb\\Desktop\\', 
                   'remote_prefix': u'Backup',
-                  'path' : u'hubictest',
+                  'path' : u'hubictest', # Directory to sync
+                  'excluded_ext' : [ # File extensions to ignore
+                      ".json",
+                      "THUMB_L.jpg",
+                      "THUMB_M.jpg",
+                      "THUMB_S.jpg",
+                      "THUMB_B.jpg",
+                      "THUMB_XL.jpg",
+                      ]
+                  },
+                  {
+                  'local_prefix': u'/volume1/',
+                  'remote_prefix': u'Backup',
+                  'path' : u'pictures',
                   'excluded_ext' : [
                       ".json",
                       "THUMB_L.jpg",
@@ -34,7 +48,9 @@ DIRECTORIES_ROOT=[{
                       "THUMB_B.jpg",
                       "THUMB_XL.jpg",
                       ]
-                  },]
+                  },
+                    # ...
+                  ]
 
 
 from Hubic.hubic import AuthPackage
