@@ -31,8 +31,18 @@ File are regularly read and check against their checksums by openstack to avoid 
 ## How does hubic/openstack handles those issues ?
 * By computing periodically a hash of every files and checking it against the hash value stored when the file was sent by the user
 
+## Dependencies
+python-swiftclient is needed, you can install it through pip :
+
+> wget https://bootstrap.pypa.io/get-pip.py
+> python get-pip.py
+
+Once pip is installed :
+>pip install python-swiftclient
+
 ## How to use this script ?
 * Copy config_sample.py to config.py and edit it according to your needs
+* You will need to register an app on hubic on your account in order to access the API from your NAS (more details here : https://api.hubic.com/sandbox/). Once you have created your app you will get an app id and secret that need to be set up in the config file.
 
 
 ### To run scripts from synology task scheduler
