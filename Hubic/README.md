@@ -42,7 +42,7 @@ Once pip is installed :
 
 ## How to use this script ?
 * Copy config_sample.py to config.py and edit it according to your needs
-* You will need to register an app on hubic on your account in order to access the API from your NAS (more details here : https://api.hubic.com/sandbox/). Once you have created your app you will get an app id and secret that need to be set up in the config file.
+* You will need to register an app on hubic on your account in order to access the API from your NAS (more details here : https://api.hubic.com/sandbox/). You will need to provide a redirect url when registering your app, to use with this script you must use  "https://example.com/" as your redirect url. Once you have created your app you will get an app id and secret that need to be set up in the config file.
 
 
 ### To run scripts from synology task scheduler
